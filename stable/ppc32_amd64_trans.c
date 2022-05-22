@@ -269,7 +269,9 @@ void ppc32_update_cr_set_altered_hreg(cpu_ppc_t *cpu)
 static forced_inline void ppc32_emit_basic_c_call(u_char **ptr,void *f)
 {
    amd64_mov_reg_imm(*ptr,AMD64_RBX,f);
+   amd64_call_stack_align(*ptr);
    amd64_call_reg(*ptr,AMD64_RBX);
+   amd64_call_stack_align_undo(*ptr);
 }
 
 /* Emit a simple call to a C function without any parameter */
@@ -399,7 +401,9 @@ static void ppc32_emit_memop(cpu_ppc_t *cpu,ppc32_jit_tcb_t *b,
    amd64_mov_reg_reg(iop->ob_ptr,AMD64_RDI,AMD64_R15,8);
 
    /* Call memory function */
+   amd64_call_stack_align(iop->ob_ptr);
    amd64_call_membase(iop->ob_ptr,AMD64_R15,MEMOP_OFFSET(op));
+   amd64_call_stack_align_undo(iop->ob_ptr);
 
    if (update)
       ppc32_store_gpr(&iop->ob_ptr,base,AMD64_R14);
@@ -440,7 +444,9 @@ static void ppc32_emit_memop_idx(cpu_ppc_t *cpu,ppc32_jit_tcb_t *b,
    amd64_mov_reg_reg(iop->ob_ptr,AMD64_RDI,AMD64_R15,8);
 
    /* Call memory function */
+   amd64_call_stack_align(iop->ob_ptr);
    amd64_call_membase(iop->ob_ptr,AMD64_R15,MEMOP_OFFSET(op));
+   amd64_call_stack_align_undo(iop->ob_ptr);
 
    if (update)
       ppc32_store_gpr(&iop->ob_ptr,ra,AMD64_R14);
@@ -561,7 +567,9 @@ static void ppc32_emit_memop_fast(cpu_ppc_t *cpu,ppc32_jit_tcb_t *b,
    amd64_mov_reg_reg(iop->ob_ptr,AMD64_RDI,AMD64_R15,8);
 
    /* Call memory access function */
+   amd64_call_stack_align(iop->ob_ptr);
    amd64_call_membase(iop->ob_ptr,AMD64_R15,MEMOP_OFFSET(opcode));
+   amd64_call_stack_align_undo(iop->ob_ptr);
 
    amd64_patch(p_exit,iop->ob_ptr);
 }

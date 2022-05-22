@@ -166,15 +166,16 @@ static forced_inline
 void mips64_emit_basic_c_call(mips64_jit_tcb_t *b,void *f)
 {
    amd64_mov_reg_imm(b->jit_ptr,AMD64_RCX,f);
+   amd64_call_stack_align(b->jit_ptr);
    amd64_call_reg(b->jit_ptr,AMD64_RCX);
+   amd64_call_stack_align_undo(b->jit_ptr);
 }
 
 /* Emit a simple call to a C function without any parameter */
 static void mips64_emit_c_call(mips64_jit_tcb_t *b,void *f)
-{   
+{
    mips64_set_pc(b,b->start_pc+((b->mips_trans_pos-1)<<2));
-   amd64_mov_reg_imm(b->jit_ptr,AMD64_RCX,f);
-   amd64_call_reg(b->jit_ptr,AMD64_RCX);
+   mips64_emit_basic_c_call(b,f);
 }
 
 /* Single-step operation */
@@ -283,7 +284,9 @@ static void mips64_emit_memop_fast64(mips64_jit_tcb_t *b,int write_op,
    amd64_mov_reg_reg(b->jit_ptr,AMD64_RDI,AMD64_R15,8);
 
    /* Call memory access function */
+   amd64_call_stack_align(b->jit_ptr);
    amd64_call_membase(b->jit_ptr,AMD64_R15,MEMOP_OFFSET(opcode));
+   amd64_call_stack_align_undo(b->jit_ptr);
 
    amd64_patch(p_exit,b->jit_ptr);
 }
@@ -363,7 +366,9 @@ static void mips64_emit_memop_fast32(mips64_jit_tcb_t *b,int write_op,
    amd64_mov_reg_reg(b->jit_ptr,AMD64_RDI,AMD64_R15,8);
 
    /* Call memory access function */
+   amd64_call_stack_align(b->jit_ptr);
    amd64_call_membase(b->jit_ptr,AMD64_R15,MEMOP_OFFSET(opcode));
+   amd64_call_stack_align_undo(b->jit_ptr);
 
    amd64_patch(p_exit,b->jit_ptr);
 }
@@ -414,7 +419,9 @@ static void mips64_emit_memop(mips64_jit_tcb_t *b,int op,int base,int offset,
    amd64_mov_reg_imm(b->jit_ptr,AMD64_RDX,target);
 
    /* Call memory access function */
+   amd64_call_stack_align(b->jit_ptr);
    amd64_call_membase(b->jit_ptr,AMD64_RDI,MEMOP_OFFSET(op));
+   amd64_call_stack_align_undo(b->jit_ptr);
 }
 
 /* Coprocessor Register transfert operation */

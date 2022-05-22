@@ -132,6 +132,19 @@ else ()
    list ( APPEND DYNAMIPS_DEFINITIONS "-DHAS_RFC2553=0" )
 endif ()
 
+# AMD64_STACK_ALIGN_CALL
+set ( AMD64_STACK_ALIGN_CALL "fast" CACHE STRING "AMD64 function call stack alignment (fast;universal;none)" )
+set_property ( CACHE AMD64_STACK_ALIGN_CALL PROPERTY STRINGS none universal fast )
+if ( "fast" STREQUAL AMD64_STACK_ALIGN_CALL )
+   list ( APPEND DYNAMIPS_DEFINITIONS "-DAMD64_STACK_ALIGN_CALL=AMD64_STACK_ALIGN_CALL_FAST" )
+elseif ( "universal" STREQUAL AMD64_STACK_ALIGN_CALL )
+   list ( APPEND DYNAMIPS_DEFINITIONS "-DAMD64_STACK_ALIGN_CALL=AMD64_STACK_ALIGN_CALL_UNIVERSAL" )
+elseif ( "none" STREQUAL AMD64_STACK_ALIGN_CALL )
+   list ( APPEND DYNAMIPS_DEFINITIONS "-DAMD64_STACK_ALIGN_CALL=AMD64_STACK_ALIGN_CALL_NONE" )
+else ()
+   message ( FATAL_ERROR "unknown AMD64 function call stack alignment AMD64_STACK_ALIGN_CALL=${AMD64_STACK_ALIGN_CALL} (fast;universal;none)" )
+endif ()
+
 # target system
 if ( "SunOS" STREQUAL "${CMAKE_SYSTEM_NAME}" )
    list ( APPEND DYNAMIPS_DEFINITIONS "-DSUNOS" "-DINADDR_NONE=0xFFFFFFFF" )
@@ -202,6 +215,7 @@ macro ( print_summary )
       set ( _ipv6 "no, missing headers or functions" )
    endif ()
    message ( "  IPv6 support (RFC 2553)            : ${_ipv6}" )
+   message ( "  AMD64 call stack alignment         : ${AMD64_STACK_ALIGN_CALL}")
 endmacro ( print_summary )
 
 message ( STATUS "configure - END" )

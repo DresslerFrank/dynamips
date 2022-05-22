@@ -892,4 +892,34 @@ typedef union {
 #define amd64_prolog(inst,frame,reg_mask) amd64_prolog_size(inst,frame,reg_mask,8)
 #define amd64_epilog(inst,reg_mask) amd64_epilog_size(inst,reg_mask,8)
 
+/*
+ * Align the stack pointer to a 16-byte boundary as required for function calls by x86_64 ABIs.
+ */
+#define AMD64_STACK_ALIGN_CALL_NONE 0
+#define AMD64_STACK_ALIGN_CALL_FAST 1
+#define AMD64_STACK_ALIGN_CALL_UNIVERSAL 2
+
+#ifndef AMD64_STACK_ALIGN_CALL
+#define AMD64_STACK_ALIGN AMD64_STACK_ALIGN_CALL_FAST
+#endif
+
+#if AMD64_STACK_ALIGN_CALL == AMD64_STACK_ALIGN_CALL_FAST
+// Assumes that the stack pointer is off by 8
+#define amd64_call_stack_align(inst) amd64_alu_reg_imm((inst),X86_SUB,AMD64_RSP,8);
+#define amd64_call_stack_align_undo(inst) amd64_alu_reg_imm((inst),X86_ADD,AMD64_RSP,8);
+#elif AMD64_STACK_ALIGN_CALL == AMD64_STACK_ALIGN_CALL_UNIVERSAL
+// Universally correct but more instructions
+#define amd64_call_stack_align(inst) do { \
+   amd64_mov_membase_reg((inst),AMD64_RSP,-8,AMD64_RSP,8); \
+   amd64_mov_membase_reg((inst),AMD64_RSP,-16,AMD64_RSP,8); \
+   amd64_alu_reg_imm((inst),X86_SUB,AMD64_RSP,8); \
+   amd64_alu_reg_imm((inst),X86_AND,AMD64_RSP,-16); \
+} while (0)
+#define amd64_call_stack_align_undo(inst) amd64_pop_reg((inst),AMD64_RSP)
+#else
+#define amd64_call_stack_align(inst)
+#define amd64_call_stack_align_undo(inst)
+#endif
+
+
 #endif // AMD64_H
